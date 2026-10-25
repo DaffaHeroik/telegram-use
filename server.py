@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""tg-agent — MCP server: Telegram for AI agents.
+"""telegram-use — MCP server: Telegram for AI agents.
 
-stdio JSON-RPC 2.0. Tools: list_chats, read_chat, batch_read, search, digest, me.
+stdio JSON-RPC 2.0. Tools: me, list_chats, read_chat, batch_read,
+search_messages, digest, chat_info + write layer + agent intelligence layer.
 
 Setup (OpenCode / Hermes / Claude / Cursor):
-  command: ["/root/tg-agent/server.py", "serve"]
+  command: ["/path/to/telegram-use/server.py", "serve"]
 
 CLI debug:
   python3 server.py call list_chats '{}'
-  python3 server.py call read_chat '{"peer": 7821918442, "limit": 10}'
+  python3 server.py call read_chat '{"peer": "me", "limit": 10}'
 """
 import asyncio
 import json

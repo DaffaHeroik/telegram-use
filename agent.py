@@ -119,7 +119,8 @@ async def smart_read(peer, max_tokens=3000, before_id=None):
 # ---------------------------------------------------------------------------
 
 _PATTERNS = [
-    ("mention",   ["@", "daffaheroikzre", "papamamamw", "hero"]),
+    # Mention: pesan yang ngetag owner. Isi username sendiri di sini.
+    ("mention",   ["@", "hai", "halo", "boss", "admin", "owner"]),
     ("question",  ["?", "gimana", "gmn", "gabisa", "error", "bug", "kenapa", "mengapa"]),
     ("urgent",    ["urgent", "asap", "sekarang", "butuh", "panik", "down", "mati"]),
     ("task",      ["tugas", "task", "todo", "deadline", "jangan lupa", "please", "tolong"]),

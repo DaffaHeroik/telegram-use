@@ -10,10 +10,10 @@ import json
 import os
 import time
 
-# Config: env vars dulu, fallback ke path known-good di VPS Bos.
-# Repo publik /= env var; jangan hardcode secret di sini.
-SESSION = os.environ.get("TG_SESSION_PATH", "/root/hero-userbot/hermes_bridge")
-ENV_FILE = os.environ.get("TG_ENV_FILE", "/root/hero-secrets/userbot.env")
+# Config: env vars wajib. Gak ada hardcoded path/credential di repo ini.
+# Jalankan `python3 setup_check.py` untuk cek segalanya.
+SESSION = os.environ["TG_SESSION_PATH"]          # contoh: /home/you/.tg/session
+ENV_FILE = os.environ["TG_ENV_FILE"]             # contoh: /home/you/.tg/telegram.env
 CACHE_DIR = os.environ.get("TG_CACHE_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache"))
 CACHE_TTL = int(os.environ.get("TG_CACHE_TTL", 300))  # detik
 
