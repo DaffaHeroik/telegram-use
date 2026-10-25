@@ -17,6 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import reader
+import writer
 
 TOOLS = [
     {
@@ -80,6 +81,91 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "chat_info",
+        "description": "Info lengkap satu chat: bio, jumlah member, tanggal dibuat, dll.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"peer": {"type": ["integer", "string"]}},
+            "required": ["peer"],
+        },
+    },
+    {
+        "name": "send_message",
+        "description": "Kirim pesan teks ke chat. MUTATING — butuh TG_ALLOW_SEND=1.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "peer": {"type": ["integer", "string"]},
+                "text": {"type": "string"},
+                "reply_to": {"type": "integer", "default": None},
+                "silent": {"type": "boolean", "default": False},
+            },
+            "required": ["peer", "text"],
+        },
+    },
+    {
+        "name": "edit_message",
+        "description": "Edit pesan sendiri. MUTATING — butuh TG_ALLOW_SEND=1.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "peer": {"type": ["integer", "string"]},
+                "msg_id": {"type": "integer"},
+                "text": {"type": "string"},
+            },
+            "required": ["peer", "msg_id", "text"],
+        },
+    },
+    {
+        "name": "delete_messages",
+        "description": "Hapus pesan (revoke=True hapus buat semua orang). Ambil berapa ID sekaligus, jangan asal hapus. Amankan pesan sebelum menghapus. MUTATING — butuh TG_ALLOW_SEND=1.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "peer": {"type": ["integer", "string"]},
+                "msg_ids": {"type": "array", "items": {"type": "integer"}},
+                "revoke": {"type": "boolean", "default": True},
+            },
+            "required": ["peer", "msg_ids"],
+        },
+    },
+    {
+        "name": "forward_messages",
+        "description": "Forward pesan ke chat lain. MUTATING — butuh TG_ALLOW_SEND=1.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "from_peer": {"type": ["integer", "string"]},
+                "msg_ids": {"type": "array", "items": {"type": "integer"}},
+                "to_peer": {"type": ["integer", "string"]},
+            },
+            "required": ["from_peer", "msg_ids", "to_peer"],
+        },
+    },
+    {
+        "name": "send_file",
+        "description": "Kirim file/media dari disk. MUTATING — butuh TG_ALLOW_SEND=1.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "peer": {"type": ["integer", "string"]},
+                "path": {"type": "string"},
+                "caption": {"type": "string", "default": None},
+                "reply_to": {"type": "integer", "default": None},
+            },
+            "required": ["peer", "path"],
+        },
+    },
+    {
+        "name": "mark_read",
+        "description": "Tandai chat sudah dibaca. MUTATING — butuh TG_ALLOW_SEND=1.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"peer": {"type": ["integer", "string"]}},
+            "required": ["peer"],
+        },
+    },
 ]
 
 
@@ -111,6 +197,30 @@ async def dispatch(name, args):
         )
     if name == "digest":
         return await reader.digest(top=args.get("top", 10), limit=args.get("limit", 5))
+    if name == "chat_info":
+        return await writer.get_chat_info(peer=args["peer"])
+    if name == "send_message":
+        return await writer.send_message(
+            peer=args["peer"], text=args["text"],
+            reply_to=args.get("reply_to"), silent=args.get("silent", False),
+        )
+    if name == "edit_message":
+        return await writer.edit_message(peer=args["peer"], msg_id=args["msg_id"], text=args["text"])
+    if name == "delete_messages":
+        return await writer.delete_messages(
+            peer=args["peer"], msg_ids=args["msg_ids"], revoke=args.get("revoke", True),
+        )
+    if name == "forward_messages":
+        return await writer.forward_messages(
+            from_peer=args["from_peer"], msg_ids=args["msg_ids"], to_peer=args["to_peer"],
+        )
+    if name == "send_file":
+        return await writer.send_file(
+            peer=args["peer"], path=args["path"],
+            caption=args.get("caption"), reply_to=args.get("reply_to"),
+        )
+    if name == "mark_read":
+        return await writer.mark_read(peer=args["peer"])
     raise ValueError(f"unknown tool: {name}")
 
 
@@ -162,8 +272,12 @@ def cli():
     if len(sys.argv) >= 4 and sys.argv[1] == "call":
         name = sys.argv[2]
         args = json.loads(sys.argv[3]) if len(sys.argv) > 3 else {}
-        out = _get_loop().run_until_complete(dispatch(name, args))
-        print(json.dumps(out, ensure_ascii=False, indent=1, default=str))
+        try:
+            out = _get_loop().run_until_complete(dispatch(name, args))
+            print(json.dumps(out, ensure_ascii=False, indent=1, default=str))
+        except Exception as e:
+            print(json.dumps({"error": str(e)}, ensure_ascii=False))
+            sys.exit(1)
     else:
         print(__doc__)
 
