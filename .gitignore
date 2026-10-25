@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+cache/
+*.session
+*.session-journal
+.env
+*.env
+!userbot.env.example
