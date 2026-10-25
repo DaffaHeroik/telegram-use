@@ -8,20 +8,23 @@ import asyncio
 import os
 
 import reader
+import agent
 
 ALLOW_SEND = os.environ.get("TG_ALLOW_SEND", "0") == "1"
 
 
-def _guard():
+def _guard(peer=None):
     if not ALLOW_SEND:
         raise RuntimeError(
             "send dinonaktifkan — set TG_ALLOW_SEND=1 untuk mengaktifkan mutating actions"
         )
+    if peer is not None:
+        agent.check_sandbox(peer)
 
 
 async def send_message(peer, text, reply_to=None, silent=False):
     """Kirim pesan teks. Return info pesan yang dikirim."""
-    _guard()
+    _guard(peer)
     c = await reader.get_client()
     kwargs = {}
     if reply_to:

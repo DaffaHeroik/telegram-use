@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import reader
 import writer
+import agent
 
 TOOLS = [
     {
@@ -166,6 +167,44 @@ TOOLS = [
             "required": ["peer"],
         },
     },
+    {
+        "name": "thread",
+        "description": "Ambil 1 pembicaraan utuh: pesan target + reply chain ke atas + semua reply. Gak terpotong walau chat ramai.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "peer": {"type": ["integer", "string"]},
+                "msg_id": {"type": "integer"},
+                "max_tokens": {"type": "integer", "default": 2000},
+            },
+            "required": ["peer", "msg_id"],
+        },
+    },
+    {
+        "name": "smart_read",
+        "description": "Baca chat auto-size sampai token budget. Kasih before_id (dari output sebelumnya) untuk halaman berikutnya tanpa re-fetch.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "peer": {"type": ["integer", "string"]},
+                "max_tokens": {"type": "integer", "default": 3000},
+                "before_id": {"type": "integer", "default": None},
+            },
+            "required": ["peer"],
+        },
+    },
+    {
+        "name": "digest2",
+        "description": "Triage seluruh inbox: classify tiap chat (urgent/question/task/support) lalu rank berdasarkan prioritas. Agent tau chat mana yang harus ditangani dulu.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "top": {"type": "integer", "default": 20},
+                "max_tokens": {"type": "integer", "default": 3000},
+                "max_per_chat": {"type": "integer", "default": 3},
+            },
+        },
+    },
 ]
 
 
@@ -221,6 +260,23 @@ async def dispatch(name, args):
         )
     if name == "mark_read":
         return await writer.mark_read(peer=args["peer"])
+    if name == "thread":
+        return await agent.thread(
+            peer=args["peer"], msg_id=args["msg_id"],
+            max_tokens=args.get("max_tokens", 2000),
+        )
+    if name == "smart_read":
+        return await agent.smart_read(
+            peer=args["peer"],
+            max_tokens=args.get("max_tokens", 3000),
+            before_id=args.get("before_id"),
+        )
+    if name == "digest2":
+        return await agent.digest2(
+            top=args.get("top", 20),
+            max_tokens=args.get("max_tokens", 3000),
+            max_per_chat=args.get("max_per_chat", 3),
+        )
     raise ValueError(f"unknown tool: {name}")
 
 

@@ -77,6 +77,21 @@ Batasannya adalah rate limit Telegram, bukan kode. Repeat query dalam window
 cache 300s gratis — pattern agent-nya: digest sekali, lalu drill ke chat yang
 relevan,semua tanpa re-hit MTProto.
 
+## Kenapa gak Telethon langsung?
+
+Karena MTProto cuma kasih pipa, bukan otak. Yang MTProto gak punya (dan
+tg-agent kasih):
+
+1. **Token budget** — setiap response dipotong sesuai `max_tokens`, tidak
+   pernah ledakkan context window. `smart_read` ambil pesan sampai budget
+   lalu kasih `next_page_hint` — pagination tanpa re-fetch.
+2. **Thread utuh** — `thread` telusuri reply chain ke atas + kumpulkan semua
+   reply. Satu pembicaraan, gak terpatial oleh pesan lain.
+3. **Triage otomatis** — `digest2` classify tiap chat (urgent/question/task/
+   support/mention) lalu rank. Agent tau chat mana harus ditangani dulu.
+4. **Sandbox** — set `TG_SANDBOX=1` + `TG_SAFE_PEERS=me,12345` maka mutating
+   action cuma bisa ke peer yang di-whitelist. Safety rail bawaan.
+
 ## Gotcha
 
 Telethon pins its event loop after connect — the MCP server MUST run every
