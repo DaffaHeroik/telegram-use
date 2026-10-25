@@ -40,14 +40,25 @@ Config snippet untuk agent (OpenCode / Hermes / Cursor / Claude):
 
 ## Tools (MCP)
 
+**Baca** (default, tanpa env):
 - `me` — identitas akun yang login
 - `list_chats [limit]` — daftar chat (id, nama, tipe, username)
 - `read_chat <peer> [limit]` — N pesan terakhir dari 1 peer
 - `batch_read [limit] [top]` — banyak chat sekaligus (paralel)
 - `search_messages <query> [peer] [limit] [top]` — substring search lintas chat
 - `digest [top] [limit]` — ringkasan per-chat (token-efficient buat triase ribuan chat)
+- `chat_info <peer>` — info lengkap 1 chat (bio, member count, dll)
 
-Semua output structured JSON siap masuk LLM context.
+**Tulis** (butuh `TG_ALLOW_SEND=1`, default OFF):
+- `send_message <peer> <text> [reply_to] [silent]`
+- `edit_message <peer> <msg_id> <text>`
+- `delete_messages <peer> <msg_ids[]> [revoke]`
+- `forward_messages <from_peer> <msg_ids[]> <to_peer>`
+- `send_file <peer> <path> [caption]`
+- `mark_read <peer>`
+
+Semua mutating action di-guard env `TG_ALLOW_SEND=1` — agent tidak bisa
+kirim apapun tanpa consent eksplisit dari owner.
 
 ## Performance (44-chat account, Tencent Beijing VPS)
 
